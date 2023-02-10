@@ -31,26 +31,16 @@ RUN apt-get update -y \
   && apt-get clean -y \
   && docker-php-ext-install soap
 
-# Configuraciones adicionales
-COPY docker-php.conf /etc/apache2/conf-enabled/docker-php.conf
-COPY pm-custom.ini /usr/local/etc/php/conf.d/pm-custom.ini
-
-RUN printf "log_errors = On \nerror_log = /dev/stderr\n" > /usr/local/etc/php/conf.d/php-logs.ini
-RUN a2enmod rewrite
-
 # Oracle instantclient - OCI
-ADD instantclient/instantclient-basiclite-linux.x64-12.2.0.1.0.zip /tmp/
-ADD instantclient/instantclient-sdk-linux.x64-12.2.0.1.0.zip /tmp/
+ADD instantclient/instantclient-basiclite-linux.x64-19.18.0.0.0dbru.zip /tmp/
+ADD instantclient/instantclient-sdk-linux.x64-19.18.0.0.0dbru.zip /tmp/
 
-RUN unzip /tmp/instantclient-basiclite-linux.x64-12.2.0.1.0.zip -d /usr/local/
-RUN unzip /tmp/instantclient-sdk-linux.x64-12.2.0.1.0.zip -d /usr/local/
-
-RUN ln -s /usr/local/instantclient_12_2 /usr/local/instantclient
-RUN ln -s /usr/local/instantclient/libclntsh.so.12.1 /usr/local/instantclient/libclntsh.so
-RUN ln -s /usr/local/instantclient/libocci.so.12.1 /usr/local/instantclient/libocci.so
+RUN unzip /tmp/instantclient-basiclite-linux.x64-19.18.0.0.0dbru.zip -d /usr/local/
+RUN unzip /tmp/instantclient-sdk-linux.x64-19.18.0.0.0dbru.zip -d /usr/local/
+RUN ln -s /usr/local/instantclient_19_18 /usr/local/instantclient
 
 ENV LD_LIBRARY_PATH=/usr/local/instantclient
-RUN echo 'instantclient,/usr/local/instantclient' | pecl install oci8
+RUN echo 'instantclient,/usr/local/instantclient' | pecl install oci8-2.2.0
 
 RUN docker-php-ext-configure pdo_oci --with-pdo-oci=instantclient,/usr/local/instantclient
 RUN docker-php-ext-install pdo_oci
@@ -85,6 +75,13 @@ RUN docker-php-ext-install zip
 RUN docker-php-ext-install xsl
 
 # Configuracion Apache
+COPY docker-php.conf /etc/apache2/conf-enabled/docker-php.conf
+COPY pm-custom.ini /usr/local/etc/php/conf.d/pm-custom.ini
+
+RUN printf "log_errors = On \nerror_log = /dev/stderr\n" > /usr/local/etc/php/conf.d/php-logs.ini
+RUN a2enmod rewrite
+RUN a2enmod headers
+
 RUN ln -s /etc/apache2/mods-available/ssl.load  /etc/apache2/mods-enabled/ssl.load
 
 
